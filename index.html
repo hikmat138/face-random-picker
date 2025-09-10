@@ -2,19 +2,21 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Deteksi Wajah Realtime</title>
+  <title>Face Random Picker</title>
+  <!-- load face-api.js dari CDN -->
   <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
   <style>
-    body { text-align: center; font-family: Arial; }
+    body { text-align: center; font-family: Arial; margin-top: 20px; }
     video, canvas { border: 2px solid #333; border-radius: 8px; }
+    button { margin-top: 15px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
   </style>
 </head>
 <body>
-  <h2>Deteksi Wajah Realtime</h2>
+  <h2>Face Random Picker</h2>
   <video id="video" width="640" height="480" autoplay muted playsinline></video>
   <canvas id="overlay" width="640" height="480"></canvas>
   <br>
-  <button id="pickBtn">Pilih Acak</button>
+  <button id="pickBtn">Pilih Wajah Acak</button>
 
   <script>
     const video = document.getElementById('video');
@@ -25,73 +27,67 @@
     let detections = [];
 
     async function setup() {
-      // load model
+      // load model tiny face detector
       await faceapi.nets.tinyFaceDetector.loadFromUri('./models');
 
-      // aktifkan kamera
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      video.srcObject = stream;
+      // akses webcam
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+      } catch (err) {
+        alert("Gagal akses kamera: " + err.message);
+        console.error(err);
+      }
 
       // mulai loop deteksi
       detectLoop();
     }
 
     async function detectLoop() {
-  if (video.readyState === 4) { // pastikan video sudah siap
-    const results = await faceapi.detectAllFaces(
-      video,
-      new faceapi.TinyFaceDetectorOptions()
-    );
+      if (video.readyState === 4) {
+        // deteksi wajah
+        const results = await faceapi.detectAllFaces(
+          video,
+          new faceapi.TinyFaceDetectorOptions()
+        );
 
-    detections = results;
+        detections = results;
 
-    // samakan ukuran canvas dengan video
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+        // samakan ukuran canvas dengan video
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    results.forEach(det => {
-      const { x, y, width, height } = det.box;
-      ctx.strokeStyle = 'lime';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, width, height);
-    });
-  }
+        // bersihkan canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  requestAnimationFrame(detectLoop);
-}
+        // gambar kotak hijau untuk semua wajah
+        results.forEach(det => {
+          const { x, y, width, height } = det.box;
+          ctx.strokeStyle = 'lime';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x, y, width, height);
+        });
+      }
 
+      requestAnimationFrame(detectLoop);
+    }
 
+    // tombol pilih wajah acak
     pickBtn.addEventListener('click', () => {
       if (detections.length === 0) {
         alert("Tidak ada wajah terdeteksi!");
         return;
       }
-      // pilih acak
       const randomFace = detections[Math.floor(Math.random() * detections.length)];
       const { x, y, width, height } = randomFace.box;
 
+      // tandai kotak merah pada wajah terpilih
       ctx.strokeStyle = 'red';
       ctx.lineWidth = 3;
       ctx.strokeRect(x, y, width, height);
     });
 
     setup();
-
-    const video = document.getElementById('video');
-
-async function startCam() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    video.srcObject = stream;
-  } catch (err) {
-    console.error("Gagal akses kamera:", err);
-    alert("Izinkan kamera agar bisa tampil!");
-  }
-}
-
-startCam();
-
   </script>
 </body>
 </html>
