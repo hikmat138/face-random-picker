@@ -77,6 +77,21 @@
     });
 
     setup();
+
+    const video = document.getElementById('video');
+
+async function startCam() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    video.srcObject = stream;
+  } catch (err) {
+    console.error("Gagal akses kamera:", err);
+    alert("Izinkan kamera agar bisa tampil!");
+  }
+}
+
+startCam();
+
   </script>
 </body>
 </html>
