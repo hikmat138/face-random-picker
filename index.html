@@ -1,85 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Face Detection Random Picker</title>
-  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
-  <style>
-    body { text-align: center; margin-top: 20px; }
-    video { border: 2px solid black; border-radius: 10px; }
-    canvas { position: absolute; top: 0; left: 0; }
-    #btnPick {
-      margin-top: 20px;
-      padding: 10px 20px;
-      background: green;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Face Random Picker</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- face-api.js CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+    <script defer src="script.js"></script>
 </head>
 <body>
-  <h2>Deteksi Wajah & Pilih Acak</h2>
-  <div style="position: relative; display: inline-block;">
-    <video id="video" width="720" height="560" autoplay muted></video>
-    <canvas id="overlay" width="720" height="560"></canvas>
-  </div>
-  <br>
-  <button id="btnPick">Pilih Acak</button>
-
-  <script>
-    const video = document.getElementById("video");
-    const canvas = document.getElementById("overlay");
-    const context = canvas.getContext("2d");
-    let lastDetections = [];
-
-    // Load model dari folder ./models di repo GitHub
-    Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri("./models")
-    ]).then(startVideo);
-
-    function startVideo() {
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => { video.srcObject = stream; })
-        .catch(err => {
-          console.error("⚠️ Error akses webcam:", err);
-          alert("Tidak bisa akses webcam. Cek izin kamera di browser.");
-        });
-    }
-
-    video.addEventListener("play", () => {
-      const displaySize = { width: video.width, height: video.height };
-      faceapi.matchDimensions(canvas, displaySize);
-
-      setInterval(async () => {
-        const detections = await faceapi.detectAllFaces(
-          video,
-          new faceapi.TinyFaceDetectorOptions()
-        );
-
-        context.clearRect(0, 0, canvas.width, canvas.height);
-
-        const resizedDetections = faceapi.resizeResults(detections, displaySize);
-        faceapi.draw.drawDetections(canvas, resizedDetections);
-
-        lastDetections = resizedDetections;
-      }, 200);
-    });
-
-    // Pilih wajah secara acak
-    document.getElementById("btnPick").addEventListener("click", () => {
-      if (lastDetections.length > 0) {
-        const randomIndex = Math.floor(Math.random() * lastDetections.length);
-        const box = lastDetections[randomIndex].box;
-
-        context.strokeStyle = "red";
-        context.lineWidth = 4;
-        context.strokeRect(box.x, box.y, box.width, box.height);
-      } else {
-        alert("Tidak ada wajah terdeteksi!");
-      }
-    });
-  </script>
+    <h1>Face Random Picker</h1>
+    <button id="startButton">Pilih Siswa</button>
+    <div id="videoContainer">
+        <video id="video" width="720" height="560" autoplay muted></video>
+        <canvas id="overlay"></canvas>
+    </div>
 </body>
 </html>
