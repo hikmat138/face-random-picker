@@ -28,13 +28,11 @@
 
     <h2>Test Webcam</h2>
     <video id="webcam" width="640" height="480" autoplay playsinline></video>
-    <button id="startBtn">Mulai Webcam</button>
 
     <script>
         const video = document.getElementById('webcam');
-        const button = document.getElementById('startBtn');
 
-        button.addEventListener('click', async () => {
+        async function startWebcam() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 video.srcObject = stream;
@@ -42,7 +40,10 @@
                 alert('Gagal mengakses webcam: ' + err.message);
                 console.error(err);
             }
-        });
+        }
+
+        // otomatis jalan
+        startWebcam();
     </script>
 
 </body>
