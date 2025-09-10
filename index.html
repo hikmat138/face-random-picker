@@ -1,51 +1,76 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Webcam</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 50px;
-            font-family: Arial, sans-serif;
-        }
-        video {
-            border: 2px solid #333;
-            border-radius: 8px;
-        }
-        button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Deteksi Wajah Realtime</title>
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+  <style>
+    body { text-align: center; font-family: Arial; }
+    video, canvas { border: 2px solid #333; border-radius: 8px; }
+  </style>
 </head>
 <body>
+  <h2>Deteksi Wajah Realtime</h2>
+  <video id="video" width="640" height="480" autoplay muted playsinline></video>
+  <canvas id="overlay" width="640" height="480"></canvas>
+  <br>
+  <button id="pickBtn">Pilih Acak</button>
 
-    <h2>Test Webcam</h2>
-    <video id="webcam" width="640" height="480" autoplay playsinline></video>
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('overlay');
+    const ctx = canvas.getContext('2d');
+    const pickBtn = document.getElementById('pickBtn');
 
-    <script>
-        const video = document.getElementById('webcam');
+    let detections = [];
 
-        async function startWebcam() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
-            } catch (err) {
-                alert('Gagal mengakses webcam: ' + err.message);
-                console.error(err);
-            }
-        }
+    async function setup() {
+      // load model
+      await faceapi.nets.tinyFaceDetector.loadFromUri('./models');
 
-        // otomatis jalan
-        startWebcam();
-    </script>
-    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+      // aktifkan kamera
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
 
+      // mulai loop deteksi
+      detectLoop();
+    }
+
+    async function detectLoop() {
+      const results = await faceapi.detectAllFaces(
+        video,
+        new faceapi.TinyFaceDetectorOptions()
+      );
+
+      detections = results;
+
+      // gambar kotak wajah
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      results.forEach(det => {
+        const { x, y, width, height } = det.box;
+        ctx.strokeStyle = 'lime';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, width, height);
+      });
+
+      requestAnimationFrame(detectLoop);
+    }
+
+    pickBtn.addEventListener('click', () => {
+      if (detections.length === 0) {
+        alert("Tidak ada wajah terdeteksi!");
+        return;
+      }
+      // pilih acak
+      const randomFace = detections[Math.floor(Math.random() * detections.length)];
+      const { x, y, width, height } = randomFace.box;
+
+      ctx.strokeStyle = 'red';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x, y, width, height);
+    });
+
+    setup();
+  </script>
 </body>
 </html>
